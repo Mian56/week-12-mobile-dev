@@ -1,3 +1,4 @@
+
 @file:OptIn(ExperimentalFoundationApi::class)
 
 package edu.farmingdale.draganddropanim_demo
@@ -49,17 +50,10 @@ import androidx.compose.ui.draganddrop.DragAndDropTransferData
 import androidx.compose.ui.draganddrop.mimeTypes
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.unit.dp
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-
 
 //private val rotation = FloatPropKey()
 
@@ -67,10 +61,14 @@ import androidx.compose.material3.Text
 @Composable
 fun DragAndDropBoxes(modifier: Modifier = Modifier) {
     var isPlaying by remember { mutableStateOf(true) }
-    var dropDirection by remember { mutableStateOf("up") } // New state to track drop direction
+
+    // Using mutableStateOf inside remember for mutable state
+    var pOffset by remember { mutableStateOf(IntOffset(130, 100)) } // Mutable position state
+    var rtatView by remember { mutableStateOf(0f) } // Mutable rotation state
 
     Column(modifier = Modifier.fillMaxSize()) {
 
+        // Row with draggable boxes
         Row(
             modifier = modifier
                 .fillMaxWidth()
@@ -111,9 +109,8 @@ fun DragAndDropBoxes(modifier: Modifier = Modifier) {
                         enter = scaleIn() + fadeIn(),
                         exit = scaleOut() + fadeOut()
                     ) {
-                        // Replacing the "Right" text with an Icon
                         Icon(
-                            imageVector = Icons.Default.ArrowForward, // Use an arrow icon as an example
+                            imageVector = Icons.Default.ArrowForward, // Example icon
                             contentDescription = "Arrow Right",
                             modifier = Modifier
                                 .fillMaxSize()
@@ -123,34 +120,29 @@ fun DragAndDropBoxes(modifier: Modifier = Modifier) {
                                             startTransfer(
                                                 transferData = DragAndDropTransferData(
                                                     clipData = ClipData.newPlainText(
-                                                        "text",
-                                                        ""
+                                                        "text", ""
                                                     )
                                                 )
                                             )
                                         }
                                     )
                                 },
-                            tint = Color.Red //
+                            tint = Color.Red
                         )
                     }
                 }
             }
         }
 
-
-
-        val pOffset by animateIntOffsetAsState(
-            targetValue = when (isPlaying) {
-                true -> IntOffset(130, 300)
-                false -> IntOffset(130, 100)
-            },
+        // Animate the position of the face icon
+        val pOffsetState by animateIntOffsetAsState(
+            targetValue = pOffset,
             animationSpec = tween(3000, easing = LinearEasing)
         )
 
-        val rtatView by animateFloatAsState(
+        // Animate the rotation of the face icon
+        val rtatViewState by animateFloatAsState(
             targetValue = if (isPlaying) 360f else 0.0f,
-            // Configure the animation duration and easing.
             animationSpec = repeatable(
                 iterations = if (isPlaying) 10 else 1,
                 tween(durationMillis = 3000, easing = LinearEasing),
@@ -158,50 +150,32 @@ fun DragAndDropBoxes(modifier: Modifier = Modifier) {
             )
         )
 
-
-        // Modify rotation based on drop direction
-        val rotationAngle by animateFloatAsState(
-            targetValue = when (dropDirection) {
-                "up" -> 180f // Rotate differently for "up" drop
-                "down" -> 360f // Rotate differently for "down" drop
-                else -> 0f
-            },
-            animationSpec = tween(durationMillis = 3000) // Duration of 3 seconds
-        )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(0.8f)
                 .background(Color.Red)
-                .graphicsLayer(
-                    rotationZ = rotationAngle // Apply the rotation to the box itself
-                )
         ) {
             Icon(
                 imageVector = Icons.Default.Face,
                 contentDescription = "Face",
                 modifier = Modifier
                     .padding(10.dp)
-                    .offset(pOffset.x.dp, pOffset.y.dp)
-                    .rotate(rtatView)
+                    .offset(pOffsetState.x.dp, pOffsetState.y.dp)
+                    .rotate(rtatViewState)
             )
         }
-    }
-    // Box wrapping the Button to use `align` modifier correctly
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
+
+        // Add a reset button
         Button(
             onClick = {
-                var pOffset = IntOffset(130, 300) // Reset to center
-                var rotationAngle = 0f // Reset rotation to 0
+                // Reset the position to the center and reset the rotation
+                pOffset = IntOffset(130, 100) // Reset position
+                rtatView = 0f // Reset rotation
             },
-            modifier = Modifier.align(Alignment.Center)
+            modifier = Modifier.padding(16.dp)
         ) {
-            Text("Reset Position")
+            Text("Reset")
         }
     }
 }
-
