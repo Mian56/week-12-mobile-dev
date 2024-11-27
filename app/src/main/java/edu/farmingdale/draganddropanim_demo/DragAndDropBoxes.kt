@@ -30,7 +30,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,10 +49,17 @@ import androidx.compose.ui.draganddrop.DragAndDropTransferData
 import androidx.compose.ui.draganddrop.mimeTypes
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+
 
 //private val rotation = FloatPropKey()
 
@@ -58,6 +67,8 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun DragAndDropBoxes(modifier: Modifier = Modifier) {
     var isPlaying by remember { mutableStateOf(true) }
+    var dropDirection by remember { mutableStateOf("up") } // New state to track drop direction
+
     Column(modifier = Modifier.fillMaxSize()) {
 
         Row(
@@ -100,12 +111,10 @@ fun DragAndDropBoxes(modifier: Modifier = Modifier) {
                         enter = scaleIn() + fadeIn(),
                         exit = scaleOut() + fadeOut()
                     ) {
-                        Text(
-                            text = "Right",
-                            fontSize = 40.sp,
-                            color = Color.Red,
-                            fontWeight = FontWeight.Bold,
-
+                        // Replacing the "Right" text with an Icon
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward, // Use an arrow icon as an example
+                            contentDescription = "Arrow Right",
                             modifier = Modifier
                                 .fillMaxSize()
                                 .dragAndDropSource {
@@ -121,12 +130,14 @@ fun DragAndDropBoxes(modifier: Modifier = Modifier) {
                                             )
                                         }
                                     )
-                                }
+                                },
+                            tint = Color.Red //
                         )
                     }
                 }
             }
         }
+
 
 
         val pOffset by animateIntOffsetAsState(
@@ -146,11 +157,25 @@ fun DragAndDropBoxes(modifier: Modifier = Modifier) {
                 repeatMode = RepeatMode.Restart
             )
         )
+
+
+        // Modify rotation based on drop direction
+        val rotationAngle by animateFloatAsState(
+            targetValue = when (dropDirection) {
+                "up" -> 180f // Rotate differently for "up" drop
+                "down" -> 360f // Rotate differently for "down" drop
+                else -> 0f
+            },
+            animationSpec = tween(durationMillis = 3000) // Duration of 3 seconds
+        )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(0.8f)
                 .background(Color.Red)
+                .graphicsLayer(
+                    rotationZ = rotationAngle // Apply the rotation to the box itself
+                )
         ) {
             Icon(
                 imageVector = Icons.Default.Face,
@@ -160,6 +185,22 @@ fun DragAndDropBoxes(modifier: Modifier = Modifier) {
                     .offset(pOffset.x.dp, pOffset.y.dp)
                     .rotate(rtatView)
             )
+        }
+    }
+    // Box wrapping the Button to use `align` modifier correctly
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Button(
+            onClick = {
+                var pOffset = IntOffset(130, 300) // Reset to center
+                var rotationAngle = 0f // Reset rotation to 0
+            },
+            modifier = Modifier.align(Alignment.Center)
+        ) {
+            Text("Reset Position")
         }
     }
 }
