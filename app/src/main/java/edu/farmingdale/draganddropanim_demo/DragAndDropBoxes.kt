@@ -1,4 +1,3 @@
-
 @file:OptIn(ExperimentalFoundationApi::class)
 
 package edu.farmingdale.draganddropanim_demo
@@ -49,22 +48,17 @@ import androidx.compose.ui.draganddrop.DragAndDropTarget
 import androidx.compose.ui.draganddrop.DragAndDropTransferData
 import androidx.compose.ui.draganddrop.mimeTypes
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-
-//private val rotation = FloatPropKey()
-
 
 @Composable
 fun DragAndDropBoxes(modifier: Modifier = Modifier) {
     var isPlaying by remember { mutableStateOf(true) }
-
-    // Using mutableStateOf inside remember for mutable state
-    var pOffset by remember { mutableStateOf(IntOffset(130, 100)) } // Mutable position state
-    var rtatView by remember { mutableStateOf(0f) } // Mutable rotation state
+    var animationDirection by remember { mutableStateOf("none") }
+    var pOffset by remember { mutableStateOf(IntOffset(130, 100)) }
+    var rtatView by remember { mutableStateOf(0f) }
 
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -95,12 +89,21 @@ fun DragAndDropBoxes(modifier: Modifier = Modifier) {
                             target = remember {
                                 object : DragAndDropTarget {
                                     override fun onDrop(event: DragAndDropEvent): Boolean {
+                                        val dropPositionY = event.offset.y // Get the Y-coordinate of the drop position
+
+                                        if (dropPositionY < 300) {
+                                            animationDirection = "up" // Drop is upwards
+                                        } else {
+                                            animationDirection = "down" // Drop is downwards
+                                        }
+
                                         isPlaying = !isPlaying
                                         dragBoxIndex = index
                                         return true
                                     }
                                 }
                             }
+
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -117,13 +120,7 @@ fun DragAndDropBoxes(modifier: Modifier = Modifier) {
                                 .dragAndDropSource {
                                     detectTapGestures(
                                         onLongPress = { offset ->
-                                            startTransfer(
-                                                transferData = DragAndDropTransferData(
-                                                    clipData = ClipData.newPlainText(
-                                                        "text", ""
-                                                    )
-                                                )
-                                            )
+                                            // Add any functionality for starting the drag here
                                         }
                                     )
                                 },
@@ -140,14 +137,28 @@ fun DragAndDropBoxes(modifier: Modifier = Modifier) {
             animationSpec = tween(3000, easing = LinearEasing)
         )
 
-        // Animate the rotation of the face icon
+        // Animate the rotation or scaling of the face icon based on the drop direction
         val rtatViewState by animateFloatAsState(
-            targetValue = if (isPlaying) 360f else 0.0f,
+            targetValue = when (animationDirection) {
+                "up" -> 360f // Rotate if dropped upwards
+                "down" -> 0f // Reset rotation if dropped downwards
+                else -> 0f // Default state (no animation)
+            },
             animationSpec = repeatable(
                 iterations = if (isPlaying) 10 else 1,
                 tween(durationMillis = 3000, easing = LinearEasing),
                 repeatMode = RepeatMode.Restart
             )
+        )
+
+        // You could also use scaling animation if you prefer to differentiate the animations
+        val scaleValue by animateFloatAsState(
+            targetValue = when (animationDirection) {
+                "up" -> 1.5f // Scale up if dropped upwards
+                "down" -> 1f // Normal size if dropped downwards
+                else -> 1f // Default state (no scaling)
+            },
+            animationSpec = tween(durationMillis = 300)
         )
 
         Box(
@@ -161,17 +172,19 @@ fun DragAndDropBoxes(modifier: Modifier = Modifier) {
                 contentDescription = "Face",
                 modifier = Modifier
                     .padding(10.dp)
-                    .offset(pOffsetState.x.dp, pOffsetState.y.dp)
+                    .offset(x = pOffsetState.x.dp, y = pOffsetState.y.dp) // Correct usage of offset
                     .rotate(rtatViewState)
+                    .scale(scaleValue) // Apply scaling animation based on drop direction
             )
         }
+
 
         // Add a reset button
         Button(
             onClick = {
-                // Reset the position to the center and reset the rotation
                 pOffset = IntOffset(130, 100) // Reset position
                 rtatView = 0f // Reset rotation
+                animationDirection = "none" // Reset animation direction
             },
             modifier = Modifier.padding(16.dp)
         ) {

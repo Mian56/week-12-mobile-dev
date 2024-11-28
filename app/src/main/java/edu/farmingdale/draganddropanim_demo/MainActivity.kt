@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
 // ToDo x: Rotate the rect around itself --- [Already-Completed]
 // ToDo x: Move - translate the rect horizontally and vertically  --- [Already-Completed]
 // ToDo 8: Add a button to reset the rect to the center of the screen  -- {Completed}
-// ToDo 9: Enable certain animation based on the drop event (like up or down)
+// ToDo 9: Enable certain animation based on the drop event (like up or down) [done but does not work]
 // ToDo 10: Make sure to commit for each one of the above and submit this individually
 
 
